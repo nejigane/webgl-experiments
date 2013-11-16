@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Room</title>
+    <meta charset="utf-8" />
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: Monospace;
+        font-size: 13px;
+      }
+      #info {
+        position: absolute;
+        bottom: 10px;
+        right: 0;
+        padding: 10px 10px 10px 20px;
+        color: #fff;
+        background-color: #000;
+        filter: alpha(opacity=70);
+        -moz-opacity:0.70;
+        opacity:0.70;
+      }
+    </style>
+    <script src="three.min.js"></script>
+    <script src="stats.min.js"></script>
+    <script src="dat.gui.min.js"></script>
+    <script src="Detector.js"></script>
+    <script type="x-shader/x-vertex" id="vshader">
+      varying vec4 vVertex;
+      varying vec3 vNormal;
+
+      void main() {
+          vVertex = vec4(position, 1.0);
+          vNormal = normal;
+          gl_Position = projectionMatrix * modelViewMatrix * vVertex;
+      }
+    </script>
+    <script type="x-shader/x-fragment" id="fshader">
+      uniform float power;
+      uniform float lightPower;
+
+      varying vec4 vVertex;
+      varying vec3 vNormal;
+
+      void main() {
+          float aoLight = 1.0 - length(vVertex.xyz) * (0.0015 + 0.005 * (1.0 - power));
+          float ceiling = 0.0;
+          if(vNormal.y > 0.5) ceiling = 1.0;
+          float ceilingGlow = pow(clamp(vVertex.y / 200.0, 0.0, 1.0), 2.0) * 0.3;
+          vec3 finalColor= vec3(aoLight + (ceiling + ceilingGlow) * lightPower);
+          gl_FragColor.rgb = finalColor;
+          gl_FragColor.a = 1.0;
+      }
+    </script>
+  </head>
+  <body>
+    <div id="info">
+      <strong>Room</strong> - originally by <a href="https://github.com/flight404/Eyeo2012">flight404</a><br />
+      press <strong>space</strong> to toggle power, <strong>arrow keys</strong> to move camera
+    </div>
+  </body>
+  <script type="text/javascript">
+    if (!Detector.webgl) Detector.addGetWebGLMessage();
+
+    var camera, scene, renderer;
+    var geometry, material, mesh;
+    var stats;
+    var destPosition;
+    var directionalLight;
+    var destPower;
+
+    init();
+    animate();
+
+    function init() {
+        destPosition = new THREE.Vector3(0, 0, 450);
+        destPower = 0;
+
+        scene = new THREE.Scene();
+
+        geometry = new THREE.CubeGeometry(700, 400, 700);
+        material = new THREE.ShaderMaterial({
+            vertexShader: document.getElementById('vshader').textContent,
+            fragmentShader: document.getElementById('fshader').textContent,
+            uniforms: {
+                power: { type: 'f', value: destPower },
+                lightPower: { type: 'f', value: destPower }
+            },
+            attributes: {},
+            side: THREE.BackSide
+        });
+        mesh = new THREE.Mesh(geometry,  material);
+        scene.add(mesh);
+
+        sphereGeometry = new THREE.SphereGeometry(70, 64, 64);
+        sphereMaterial = new THREE.MeshPhongMaterial({
+            color: 0xbbbbbb,
+            specular: 0xffffff
+        });
+        sphere = new THREE.Mesh(sphereGeometry,  sphereMaterial);
+        scene.add(sphere);
+
+        directionalLight = new THREE.DirectionalLight(0xffffff);
+        directionalLight.position.y = 200;
+        scene.add(directionalLight);
+
+        camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 5, 3000);
+        camera.position.z = 450;
+        camera.lookAt( scene.position );
+
+        renderer = new THREE.WebGLRenderer({antialias: true});
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setClearColorHex(0x000000);
+        document.body.appendChild(renderer.domElement);
+
+        stats = new Stats();
+        stats.domElement.style.position = 'absolute';
+        stats.domElement.style.top = '0px';
+        stats.domElement.style.left = '0px';
+        document.body.appendChild(stats.domElement);
+
+        window.addEventListener('resize', onWindowResize, false);
+        document.addEventListener('keydown', onKeyDown, false);
+    }
+
+    function animate() {
+        requestAnimationFrame(animate);
+    
+        var power = material.uniforms.power;
+        power.value += (destPower - power.value) * 0.2;
+        material.uniforms.lightPower.value = Math.cos((1.0 - power.value) * 5.0 * Math.PI) * 0.5 + 0.5;
+
+        directionalLight.intensity = power.value;
+
+        camera.position.x += (destPosition.x - camera.position.x) * 0.05;
+        camera.position.y += (destPosition.y - camera.position.y) * 0.05;
+        camera.position.z += (destPosition.z - camera.position.z) * 0.05;
+        camera.lookAt(scene.position);
+        camera.updateProjectionMatrix();
+
+        renderer.render(scene, camera);
+        stats.update();
+    }
+
+    function onWindowResize() {
+    	camera.aspect = window.innerWidth / window.innerHeight;
+    	camera.updateProjectionMatrix();
+    	renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+    
+    function onKeyDown(event) {
+        if ((event.keyCode != 32 && event.keyCode < 37) || event.keyCode > 40) return;
+        switch(event.keyCode) {
+            case 32: /* space */
+                destPower = (destPower > 0.5) ? 0 : 1.0;
+                break;
+            case 37: /* left */
+                destPosition = new THREE.Vector3(-315, 0, 0);
+                break;
+            case 38: /* up */
+                destPosition = new THREE.Vector3(-315, 180, 315);
+                break;
+            case 39: /* right */
+                destPosition = new THREE.Vector3(315, -180, 315);
+                break;
+            case 40: /* down */
+                destPosition = new THREE.Vector3(0, 0, 450);
+                break;
+        }
+        event.preventDefault();
+    }
+    </script>
+</html>
