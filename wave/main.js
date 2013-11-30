@@ -5,11 +5,13 @@ var wave, wall;
 var stats;
 var noise;
 var segment;
+var time;
 
 init();
 animate();
 
 function init() {
+  time = 0;
   segment = { x: 128, y: 16 };
 
   noise = new SimplexNoise();
@@ -21,7 +23,7 @@ function init() {
     color: 0x002288
   }));
   wallMesh.rotation.x = Math.PI;
-  wallMesh.z = -128;
+  wallMesh.position.z = -128;
   scene.add(wallMesh);
 
   var mesh = new THREE.Mesh(wave,  new THREE.MeshPhongMaterial({
@@ -39,6 +41,7 @@ function init() {
 
   var h = 1024 * window.innerHeight / window.innerWidth;
   camera = new THREE.OrthographicCamera(-1024, 1024, -h, h, -1024, 1024);
+  camera.position.z = 100;
   camera.lookAt(scene.position);
 
   renderer = new THREE.WebGLRenderer({antialias: true});
@@ -56,10 +59,11 @@ function init() {
 }
 
 function animate() {
+  time += 0.005;
   requestAnimationFrame(animate);
   for (var i = 0; i < wave.vertices.length; i++ ) {
     var vertex = wave.vertices[i];
-    vertex.z = noise.noise3d(vertex.x/1000, vertex.y/100, new Date/5000) * 120;
+    vertex.z = noise.noise3d(vertex.x/1500, vertex.y/100, time) * 120;
   }
   wave.computeFaceNormals();
   wave.computeVertexNormals();
