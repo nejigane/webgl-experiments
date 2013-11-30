@@ -26,33 +26,6 @@
     <script src="../Detector.js"></script>
     <script src="three.js"></script>
     <script src="noise.js"></script>
-    <script type="x-shader/x-vertex" id="vshader">
-      varying vec4 vVertex;
-      varying vec3 vNormal;
-
-      void main() {
-          vVertex = vec4(position, 1.0);
-          vNormal = normal;
-          gl_Position = projectionMatrix * modelViewMatrix * vVertex;
-      }
-    </script>
-    <script type="x-shader/x-fragment" id="fshader">
-      uniform float power;
-      uniform float lightPower;
-
-      varying vec4 vVertex;
-      varying vec3 vNormal;
-
-      void main() {
-          float aoLight = 1.0 - length(vVertex.xyz) * (0.0015 + 0.005 * (1.0 - power));
-          float ceiling = 0.0;
-          if(vNormal.y > 0.5) ceiling = 1.0;
-          float ceilingGlow = pow(clamp(vVertex.y / 200.0, 0.0, 1.0), 2.0) * 0.3;
-          vec3 finalColor= vec3(aoLight + (ceiling + ceilingGlow) * lightPower);
-          gl_FragColor.rgb = finalColor;
-          gl_FragColor.a = 1.0;
-      }
-    </script>
   </head>
   <body>
     <div id="info">
