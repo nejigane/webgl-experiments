@@ -35,21 +35,25 @@
     <script type="x-shader/x-fragment" id="fshader">
       uniform vec4 backgroundColor;
       uniform sampler2D map;
+      uniform float darkness;
       varying vec2 vUv;
 
       void main() {
+          vec4 color;
           if (vUv.y >= 0.5) {
-              gl_FragColor = texture2D(map, vec2(vUv.x, (vUv.y - 0.5) * 2.0));
+              color = texture2D(map, vec2(vUv.x, (vUv.y - 0.5) * 2.0));
           } else {
-              gl_FragColor = mix(texture2D(map, vec2(vUv.x, (0.5 - vUv.y) * 2.0)), backgroundColor, 1.0 - vUv.y);
+              color = mix(texture2D(map, vec2(vUv.x, (0.5 - vUv.y) * 2.0)), backgroundColor, 1.0 - vUv.y);
           }
+          gl_FragColor = mix(color, vec4(0, 0, 0, 1.0), darkness);
       }
     </script>
     <script src="three.js"></script>
   </head>
   <body>
     <div id="info">
-      <strong>Cover Flow</strong>
+      <strong>Cover Flow</strong><br />
+      use <strong>arrow keys</strong> to move covers
     </div>
   </body>
   <script src="main.js"></script>
