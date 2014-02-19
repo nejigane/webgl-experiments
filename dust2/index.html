@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Random Dust</title>
+    <meta charset="utf-8" />
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: Monospace;
+        font-size: 13px;
+      }
+      #info {
+        position: absolute;
+        bottom: 10px;
+        right: 0;
+        padding: 10px 10px 10px 20px;
+        color: #fff;
+        background-color: #000;
+        filter: alpha(opacity=70);
+        -moz-opacity:0.70;
+        opacity:0.70;
+      }
+    </style>
+    <script src="../stats.min.js"></script>
+    <script src="../Detector.js"></script>
+    <script id="texture_vertex_simulation_shader" type="x-shader/x-vertex">
+      varying vec2 vUv;
+      void main() {
+        vUv = vec2(uv.x, 1.0 - uv.y);
+        gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+      }
+    </script>
+    <script id="texture_fragment_simulation_shader" type="x-shader/x-fragment">
+      varying vec2 vUv;
+      uniform vec2 resolution;
+      uniform sampler2D tPositions;
+      void main() {
+        vec4 info = texture2D(tPositions, vUv);
+        info.x += info.z;
+        info.y += info.w;
+        if (info.x < 0.) info.x += resolution.x;
+        if (info.x > resolution.x) info.x -= resolution.x;
+        if (info.y < 0.) info.y += resolution.y;
+        if (info.y > resolution.y) info.y -= resolution.y;
+        gl_FragColor = info;
+      }
+    </script>
+    <script src="three.js"></script>
+    <script src="ParticleSimulator.js"></script>
+  </head>
+  <body>
+    <div id="info">
+      <strong>Random Dust</strong>
+    </div>
+  </body>
+  <script src="main.js"></script>
+</html>
